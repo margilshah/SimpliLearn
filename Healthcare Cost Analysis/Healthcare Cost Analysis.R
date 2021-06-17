@@ -1,0 +1,288 @@
+# DESCRIPTION
+# Background and Objective:
+#   A nationwide survey of hospital costs conducted by the US Agency for 
+#   Healthcare consists of hospital records of inpatient samples. 
+#   The given data is restricted to the city of Wisconsin and relates 
+#   to patients in the age group 0-17 years. The agency wants to analyze 
+#   the data to research on healthcare costs and their utilization.
+# Domain: Healthcare
+
+#Let's Clean up Global Environment
+rm(list = ls())
+
+# Load Dataset
+
+hc_cost <- read.csv("HospitalCosts.csv")
+head(hc_cost)
+# AGE FEMALE LOS RACE TOTCHG APRDRG
+# 1  17      1   2    1   2660    560
+# 2  17      0   2    1   1689    753
+# 3  17      1   7    1  20060    930
+# 4  17      1   1    1    736    758
+# 5  17      1   1    1   1194    754
+# 6  17      0   0    1   3305    347
+
+# Analysis to be done:
+
+# 1. To record the patient statistics, the agency wants to find the age 
+#    category of people who frequent the hospital and has the maximum 
+#    expenditure.
+
+# Code 
+# Data Preprocessing 
+
+summary(hc_cost)
+# AGE             FEMALE           LOS              RACE           TOTCHG          APRDRG     
+# Min.   : 0.000   Min.   :0.000   Min.   : 0.000   Min.   :1.000   Min.   :  532   Min.   : 21.0  
+# 1st Qu.: 0.000   1st Qu.:0.000   1st Qu.: 2.000   1st Qu.:1.000   1st Qu.: 1216   1st Qu.:640.0  
+# Median : 0.000   Median :1.000   Median : 2.000   Median :1.000   Median : 1536   Median :640.0  
+# Mean   : 5.086   Mean   :0.512   Mean   : 2.828   Mean   :1.078   Mean   : 2774   Mean   :616.4  
+# 3rd Qu.:13.000   3rd Qu.:1.000   3rd Qu.: 3.000   3rd Qu.:1.000   3rd Qu.: 2530   3rd Qu.:751.0  
+# Max.   :17.000   Max.   :1.000   Max.   :41.000   Max.   :6.000   Max.   :48388   Max.   :952.0  
+# NA's   :1                     
+colSums(is.na(hc_cost))
+# AGE FEMALE    LOS   RACE TOTCHG APRDRG 
+# 0      0      0      1      0      0 
+hc_cost <- na.omit(hc_cost)
+colSums(is.na(hc_cost))
+# AGE FEMALE    LOS   RACE TOTCHG APRDRG 
+# 0      0      0      0      0      0
+
+dim(hc_cost)
+# [1] 499   6
+str(hc_cost)
+# 'data.frame':	499 obs. of  6 variables:
+#   $ AGE   : int  17 17 17 17 17 17 17 16 16 17 ...
+# $ FEMALE: int  1 0 1 1 1 0 1 1 1 1 ...
+# $ LOS   : int  2 2 7 1 1 0 4 2 1 2 ...
+# $ RACE  : int  1 1 1 1 1 1 1 1 1 1 ...
+# $ TOTCHG: int  2660 1689 20060 736 1194 3305 2205 1167 532 1363 ...
+# $ APRDRG: int  560 753 930 758 754 347 754 754 753 758 ...
+# - attr(*, "na.action")= 'omit' Named int 277
+# ..- attr(*, "names")= chr "277"
+
+# Race and Female are be categorical variable
+
+hc_cost$RACE <- as.factor(hc_cost$RACE)
+hc_cost$FEMALE <- as.factor(hc_cost$FEMALE)
+str(hc_cost)
+# 'data.frame':	499 obs. of  6 variables:
+# $ AGE   : int  17 17 17 17 17 17 17 16 16 17 ...
+# $ FEMALE: Factor w/ 2 levels "0","1": 2 1 2 2 2 1 2 2 2 2 ...
+# $ LOS   : int  2 2 7 1 1 0 4 2 1 2 ...
+# $ RACE  : Factor w/ 6 levels "1","2","3","4",..: 1 1 1 1 1 1 1 1 1 1 ...
+# $ TOTCHG: int  2660 1689 20060 736 1194 3305 2205 1167 532 1363 ...
+# $ APRDRG: int  560 753 930 758 754 347 754 754 753 758 ...
+# - attr(*, "na.action")= 'omit' Named int 277
+# ..- attr(*, "names")= chr "277"
+summary(as.factor(hc_cost$AGE))
+# 0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17 
+# 306  10   1   3   2   2   2   3   2   2   4   8  15  18  25  29  29  38 
+
+# Result: We can see that infants (AGE = 0) have the maximum 
+# frequency of hospital visit, going above 300. we can see that 
+# there are 306 entries for those in the range of 0-1 year.
+
+# b. To find the age category with the maximum expenditure
+
+# Age TotChgAge
+
+library(dplyr)
+df_AGE <- summarise(group_by(hc_cost, AGE), TotChgAge = sum(TOTCHG))
+df_AGE
+# # A tibble: 18 x 2
+# AGE TotChgAge
+# <int>     <int>
+#   1     0    676962
+# 2     1     37744
+# 3     2      7298
+# 4     3     30550
+# 5     4     15992
+# 6     5     18507
+# 7     6     17928
+# 8     7     10087
+# 9     8      4741
+# 10     9     21147
+# 11    10     24469
+# 12    11     14250
+# 13    12     54912
+# 14    13     31135
+# 15    14     64643
+# 16    15    111747
+# 17    16     69149
+# 18    17    174777
+
+arrange(df_AGE, desc(TotChgAge))
+# # A tibble: 18 x 2
+# AGE TotChgAge
+# <int>     <int>
+#   1     0    676962
+# 2    17    174777
+# 3    15    111747
+# 4    16     69149
+# 5    14     64643
+# 6    12     54912
+# 7     1     37744
+# 8    13     31135
+# 9     3     30550
+# 10    10     24469
+# 11     9     21147
+# 12     5     18507
+# 13     6     17928
+# 14     4     15992
+# 15    11     14250
+# 16     7     10087
+# 17     2      7298
+# 18     8      4741
+arrange(df_AGE, desc(TotChgAge))[1,] # 1st row``
+
+# OUTPUT
+# # A tibble: 1 x 2
+# AGE TotChgAge
+# <int>     <int>
+#   1     0    676962
+
+# Result: From the result we can see that the infant category (AGE = 0) has maximum hospital costs 
+# as well (in accordance with the number or frequency of visit). 
+
+# 2. In order of severity of the diagnosis and treatments and to find out 
+#    the expensive treatments, the agency wants to find the diagnosis-
+#    related group that has maximum hospitalization and expenditure.
+
+# Code
+
+df_APRDRG <- summarise(group_by(hc_cost,APRDRG), TotChgAPRDRG = sum(TOTCHG))
+df_APRDRG
+
+# # A tibble: 63 x 2
+# APRDRG TotChgAPRDRG
+# <int>        <int>
+#   1     21        10002
+# 2     23        14174
+# 3     49        20195
+# 4     50         3908
+# 5     51         3023
+# 6     53        82271
+# 7     54          851
+# 8     57        14509
+# 9     58         2117
+# 10     92        12024
+# # ... with 53 more rows
+
+summary(as.factor(hc_cost$APRDRG))
+
+# OUTPUT
+# Result: We can see that DIAGONSIS-RELATED group 640 have the maximum 
+# frequency of hospital visit, we can see that there are 266 entries.
+
+arrange(df_APRDRG, desc(TotChgAPRDRG))
+arrange(df_APRDRG, desc(TotChgAPRDRG))[1,] # 1st row`
+
+# OUTPUT
+# APRDRG TotChgAPRDRG
+# <int>  <int>
+# 640    436822
+
+# Result: From the result we can see that the DIAGNOSIS-GROUP 640 has 
+#         maximum hospital costs as well 
+#         (in accordance with the number or frequency of visit AND expenditure).
+
+# 3. To make sure that there is no malpractice, the agency needs to analyze 
+#    if the race of the patient is related to the hospitalization costs.
+
+# If there is any effect of RACE on TOTCHG
+
+# Then, to verify if the races made an impact on the costs, perform an ANOVA with the 
+# following variables:  
+
+# ANOVA dependent variable: TOTCHG 
+# Categorical/grouping variable: RACE Missing values: 1 NA value, use na.omit 
+# to remove the NA value   
+# 
+
+# Code:  
+
+str(hc_cost$RACE)
+str(hc_cost$TOTCHG)
+
+model <- aov(TOTCHG ~ RACE, data = hc_cost)  # numerical/int ~ categorical varibale
+
+# dependent variable ~ independent variable
+
+summary(model)
+
+alpha = 0.05
+
+pvalue = 0.943
+
+pvalue < alpha 
+
+# OUTPUT
+#     We get FALSE So, There is no malpractice, the agency analyzed 
+#     race of the patient, which is not related to the hospitalization costs.
+
+# if this is true = whenever p_value is less than alpha; we reject the null hypothesis
+
+# 4. To properly utilize the costs, the agency has to analyze the severity of 
+#    the hospital costs by age and gender for the proper allocation of resources.
+
+#-----------------------------------------------------------------------------------------------------
+# ANOVA is used to test relationship between one quantitative and one or 
+# more qualitative variable.
+#-----------------------------------------------------------------------------------------------------
+
+str(hc_cost$AGE)
+str(hc_cost$FEMALE)
+
+model4 <- aov(TOTCHG ~ AGE + FEMALE, data = hc_cost)
+
+summary(model4)
+
+alpha = 0.05
+
+pvalue_Age = 0.00323
+pvalue_Gender = 0.03638
+
+pvalue_Age < alpha 
+pvalue_Gender < alpha
+
+# OUTPUT
+# 1. pvalue_Age is very less this means it is a important factor in the 
+#    hospital costs as seen by the significance levels
+# 2. pvalue_Gender is also very less this means it is a important factor in 
+#    the hospital costs as seen by the significance levels and same 
+#    with allocation of resource.
+
+
+# 5. Since the length of stay is the crucial factor for inpatients, the agency 
+#    wants to find if the length of stay can be predicted from age, gender, and race.
+
+# Since the length of stay is a continuous variable, we use linear regression to 
+# predict the variable.  
+
+# Dependent variable: LOS ;; Independent variables: AGE, FEMALE, RACE
+
+# length of stay can be predicted from age, female, and race.
+
+Model5 <- lm(LOS ~ AGE + FEMALE + RACE, data = hc_cost)
+summary(Model5)
+
+#OUTPUT
+# The significance codes are almost null for all the variables, except for the 
+# intercept. The p-value high which signifies that there is no linear 
+# relationship between the given variables.Hence we cannot predict the length of 
+# stay of the patients based on the age, gender, and race.
+
+
+# 6. To perform a complete analysis, the agency wants to find the variable that 
+#    mainly affects hospital costs.
+
+model6 <- lm(TOTCHG ~ ., data = hc_cost)
+summary(model6)
+
+# Based on the output we can see that the Age and Length of stay affects the 
+# total Hospital cost. Cost is directly proportional to the Length 
+# i.e. higher the Length of stay of patients will result to higher hospital cost. 
+# As per the output we can see that with an increase of 1 day stay, 
+# the hospital cost will increase by 742.
+
